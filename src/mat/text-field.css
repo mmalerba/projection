@@ -1,0 +1,39 @@
+:host {
+  display: inline-block;
+  font: 1rem/1em Arial;
+  margin-top: 1.4em;
+}
+
+.outline {
+  display: flex;
+  position: relative;
+  box-sizing: border-box;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  height: 2em;
+  padding: 0.2em;
+}
+
+.label {
+  display: flex;
+  position: absolute;
+  align-items: center;
+  top: 0;
+  bottom: 0;
+}
+
+.errors {
+  padding: 0.2em;
+  font-size: 0.75em;
+}
+
+:host:has(:focus) .label,
+:host:not(.empty) .label,
+:host:has(:placeholder-shown) .label {
+  transform: translateY(-1.7em);
+  padding-left: 0;
+}
+
+:host:not(.valid) {
+  color: red;
+}

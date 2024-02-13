@@ -1,0 +1,22 @@
+<app-text-field label="First Name">
+  <input
+    *cdkProject="'input'"
+    matInput
+    [validator]="required"
+    placeholder="John"
+  />
+</app-text-field>
+
+<app-text-field label="Last Name">
+  <input
+    *cdkProject="'input'"
+    matInput
+    [validator]="required"
+    placeholder="Doe"
+  />
+  <span *cdkProject="'error'">
+    Last Name is required <a href="/">(why?)</a>
+  </span>
+</app-text-field>
+
+<app-text-field label="Address"></app-text-field>

@@ -1,0 +1,4 @@
+<mat-text-field [cdkExposeSlots]="['input', 'error']">
+  <ng-template cdkProject="label">{{ label() }}</ng-template>
+  <ng-template cdkProject="error"> {{ label() }} is required </ng-template>
+</mat-text-field>

@@ -1,0 +1,12 @@
+<label class="outline">
+  <span class="label">
+    <ng-template cdkSlot="label" />
+  </span>
+  <input *cdkSlot="'input'" matInput type="text" />
+</label>
+
+@if (!valid()) {
+  <div class="errors">
+    <ng-template cdkSlot="error">Invalid input</ng-template>
+  </div>
+}
