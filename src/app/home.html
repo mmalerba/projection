@@ -20,3 +20,16 @@
 </app-text-field>
 
 <app-text-field label="Address"></app-text-field>
+
+<mat-datepicker>
+  <input *cdkProject="'input'" matInput placeholder="Pick a date" />
+  <ng-container *cdkProject="'cell'; let picker = $picker; let date = $date">
+    <button (click)="picker.select(date)" [disabled]="date === null">
+      @if (date === today) {
+        <b>{{ date }}</b>
+      } @else {
+        <span>{{ date }}</span>
+      }
+    </button>
+  </ng-container>
+</mat-datepicker>

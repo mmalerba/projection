@@ -32,6 +32,6 @@ export class MatInput {
   readonly valid = computed(() => this.validator()(this.value()));
 
   protected handleInput(event: Event) {
-    this.value.set((event.target as HTMLInputElement).value);
+    this.value.set((event.target as HTMLInputElement).value ?? '');
   }
 }

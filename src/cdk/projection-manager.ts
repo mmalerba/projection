@@ -1,6 +1,7 @@
 import {
   Directive,
   Injectable,
+  InjectionToken,
   Signal,
   computed,
   contentChildren,
@@ -55,6 +56,7 @@ export abstract class CdkProjectionManager {
       }
       return new Map(current);
     });
+    this.parentProjectionManager?.registerContent(add);
   }
 
   unregisterContent(remove: Map<any, any>) {
@@ -67,6 +69,27 @@ export abstract class CdkProjectionManager {
       }
       return new Map(current);
     });
+    this.parentProjectionManager?.unregisterContent(remove);
+  }
+
+  query<T>(
+    token: T,
+  ): T extends InjectionToken<infer R>
+    ? Signal<R | undefined>
+    : T extends abstract new (...args: any) => any
+      ? Signal<InstanceType<T> | undefined>
+      : never {
+    return computed(() => this.queryAll(token)()[0]) as any;
+  }
+
+  queryAll<T>(
+    token: T,
+  ): T extends InjectionToken<infer R>
+    ? Signal<R[]>
+    : T extends abstract new (...args: any) => any
+      ? Signal<InstanceType<T>[]>
+      : never {
+    return computed(() => this.registeredContent().get(token) ?? []) as any;
   }
 }
 

@@ -1,5 +1,6 @@
 import {
   Directive,
+  EmbeddedViewRef,
   InjectionToken,
   Injector,
   Signal,
@@ -9,6 +10,7 @@ import {
   effect,
   inject,
   input,
+  untracked,
 } from '@angular/core';
 import { CDK_PROJECTION_MANAGER } from './injection-tokens';
 
@@ -19,6 +21,8 @@ import { CDK_PROJECTION_MANAGER } from './injection-tokens';
 })
 export class CdkProjectionSlot {
   readonly name = input.required<string>({ alias: 'cdkSlot' });
+
+  readonly context = input<any>(undefined, { alias: 'cdkSlotContext' });
 
   protected readonly defaultTemplate = inject(TemplateRef);
 
@@ -35,34 +39,36 @@ export class CdkProjectionSlot {
   );
 
   constructor() {
-    effect(
-      (onCleanup) => {
-        const viewRef = this.viewContainerRef.createEmbeddedView(
+    effect((onCleanup) => {
+      let viewRef: EmbeddedViewRef<unknown>;
+      untracked(() => {
+        viewRef = this.viewContainerRef.createEmbeddedView(
           this.content(),
-          undefined,
+          this.context(),
           { injector: this.injector },
         );
-        onCleanup(() => viewRef.destroy());
-      },
-      {
-        allowSignalWrites: true,
-      },
-    );
+      });
+      onCleanup(() => viewRef.destroy());
+    });
   }
 
   query<T>(
     token: T,
   ): T extends InjectionToken<infer R>
     ? Signal<R | undefined>
-    : Signal<T | undefined> {
-    return computed(() => this.queryAll(token)()[0]) as any;
+    : T extends abstract new (...args: any) => any
+      ? Signal<InstanceType<T> | undefined>
+      : never {
+    return this.projectionManager.query(token);
   }
 
   queryAll<T>(
     token: T,
-  ): T extends InjectionToken<infer R> ? Signal<R[]> : Signal<T[]> {
-    return computed(
-      () => this.projectionManager.registeredContent().get(token) ?? [],
-    ) as any;
+  ): T extends InjectionToken<infer R>
+    ? Signal<R[]>
+    : T extends abstract new (...args: any) => any
+      ? Signal<InstanceType<T>[]>
+      : never {
+    return this.projectionManager.queryAll(token);
   }
 }

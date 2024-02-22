@@ -1,0 +1,27 @@
+<mat-text-field [cdkExposeSlots]="['input']">
+  <ng-template cdkProject="label">Date</ng-template>
+</mat-text-field>
+
+<ng-container [ngTemplateOutlet]="isOpen() ? popup : null"></ng-container>
+
+<ng-template #popup>
+  <div class="popup">
+    <h3 class="month">{{ monthName }}</h3>
+    <div class="calendar">
+      @for (day of ["S", "M", "T", "W", "T", "F", "S"]; track $index) {
+        <div class="cell">{{ day }}</div>
+      }
+      @for (week of dates; track $index) {
+        @for (date of week; track $index) {
+          <div class="cell">
+            <ng-container
+              *cdkSlot="'cell'; context: { $picker: this, $date: date }"
+            >
+              {{ date }}
+            </ng-container>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</ng-template>

@@ -7,3 +7,5 @@ export const MAT_TEXT_FIELD = new InjectionToken<MatTextField>(
 );
 
 export const MAT_INPUT = new InjectionToken<MatInput>('MAT_INPUT');
+
+export const MAT_DATEPICKER = new InjectionToken<MatInput>('MAT_DATEPICKER');
