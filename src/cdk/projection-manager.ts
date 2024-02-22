@@ -5,6 +5,7 @@ import {
   computed,
   contentChildren,
   inject,
+  signal,
 } from '@angular/core';
 import { CdkProjectedContent } from './content';
 import {
@@ -44,6 +45,29 @@ export abstract class CdkProjectionManager {
     }
     return templates;
   });
+
+  readonly registeredContent = signal<Map<any, any[]>>(new Map());
+
+  registerContent(add: Map<any, any>) {
+    this.registeredContent.update((current) => {
+      for (const [token, instance] of add) {
+        current.set(token, [...(current.get(token) ?? []), instance]);
+      }
+      return new Map(current);
+    });
+  }
+
+  unregisterContent(remove: Map<any, any>) {
+    this.registeredContent.update((current) => {
+      for (const [token, instance] of remove) {
+        current.set(
+          token,
+          (current.get(token) ?? []).filter((i) => i !== instance),
+        );
+      }
+      return new Map(current);
+    });
+  }
 }
 
 @Directive({

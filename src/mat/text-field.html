@@ -2,7 +2,9 @@
   <span class="label">
     <ng-template cdkSlot="label" />
   </span>
-  <input *cdkSlot="'input'" matInput type="text" />
+  <ng-template cdkSlot="input" #input="cdkSlot">
+    <input matInput type="text" />
+  </ng-template>
 </label>
 
 @if (!valid()) {

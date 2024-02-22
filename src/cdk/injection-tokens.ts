@@ -13,3 +13,7 @@ export const CDK_PROJECTION_MANAGER = new InjectionToken<CdkProjectionManager>(
 
 export const CDK_EXPOSE_PROJECTION_SLOTS =
   new InjectionToken<CdkExposeProjectionSlots>('CDK_EXPOSE_PROJECTION_SLOTS');
+
+export const CDK_CONTENT_REGISTRATION = new InjectionToken<{
+  destroy: () => void;
+}>('CDK_CONTENT_REGISTRATION');

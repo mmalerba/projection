@@ -1,6 +1,8 @@
 import {
   Directive,
+  InjectionToken,
   Injector,
+  Signal,
   TemplateRef,
   ViewContainerRef,
   computed,
@@ -13,6 +15,7 @@ import { CDK_PROJECTION_MANAGER } from './injection-tokens';
 @Directive({
   selector: 'ng-template[cdkSlot]',
   standalone: true,
+  exportAs: 'cdkSlot',
 })
 export class CdkProjectionSlot {
   readonly name = input.required<string>({ alias: 'cdkSlot' });
@@ -45,5 +48,21 @@ export class CdkProjectionSlot {
         allowSignalWrites: true,
       },
     );
+  }
+
+  query<T>(
+    token: T,
+  ): T extends InjectionToken<infer R>
+    ? Signal<R | undefined>
+    : Signal<T | undefined> {
+    return computed(() => this.queryAll(token)()[0]) as any;
+  }
+
+  queryAll<T>(
+    token: T,
+  ): T extends InjectionToken<infer R> ? Signal<R[]> : Signal<T[]> {
+    return computed(
+      () => this.projectionManager.registeredContent().get(token) ?? [],
+    ) as any;
   }
 }

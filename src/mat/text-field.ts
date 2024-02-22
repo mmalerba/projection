@@ -2,9 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  contentChildren,
-  signal,
-  viewChildren,
+  viewChild,
 } from '@angular/core';
 import { CdkAcceptsProjectedContent } from '../cdk/projection-manager';
 import { CdkProjectionSlot } from '../cdk/slot';
@@ -26,11 +24,11 @@ import { MatInput } from './input';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MatTextField {
-  protected readonly viewInput = viewChildren(MAT_INPUT);
+  protected readonly inputSlot = viewChild<CdkProjectionSlot>('input');
 
-  protected readonly contentInput = contentChildren(MAT_INPUT);
-
-  readonly input = signal<MatInput | undefined>(undefined);
+  protected readonly input = computed(() =>
+    this.inputSlot()?.query(MAT_INPUT)(),
+  );
 
   readonly value = computed(() => this.input()?.value() ?? '');
 

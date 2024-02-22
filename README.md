@@ -37,9 +37,17 @@ Directive that allows passing content through to a child component. By default, 
 
 ### Angular Material perspective
 
-As an example, lets say we're creating a text field component for Angular Material. We want it to work like the mat-form-field, except we'll use the projection directives above for this one. We'll create 2 components: `<mat-text-field>` (for the container with floating label, error message, etc.) and `<input matInput>` (to interface with the native input). The `matInput` doesn't need to use any content projection, but the `<mat-text-field>` has a few content projected pieces so lets look at its template:
+As an example, lets say we're creating a text field component for Angular Material. We want it to work like the mat-form-field, except we'll use the projection directives above for this one. We'll create 2 components: `<mat-text-field>` (for the container with floating label, error message, etc.) and `<input matInput>` (to interface with the native input).
 
-https://github.com/mmalerba/projection/blob/9bb73906c00a502fe535fc4393461d72ac53de4d/src/mat/text-field.html#L1-L12
+The `matInput` doesn't need to use any content projection, but we do want the container text field to be aware of the input projected into it. Unfortunately we can't rely on `viewChild` / `contentChild` for this, so we have to add a few lines to our `matInput` metadata to allow `<mat-text-field>` to query for it when its projected in:
+
+https://github.com/mmalerba/projection/blob/6cfa65901e9dbbf453e68139b3b3273c1f9b529f/src/mat/input.ts#L19-L23
+
+We add a special provider and host directive to register the content. Calling `cdkRegisterContent(MAT_INPUT)` registers the `MAT_INPUT` token to be available for querying, and the `CdkRegistersContent` host directive does the work to hook it up.
+
+The `<mat-text-field>` has a few content projected pieces so lets look at its template:
+
+https://github.com/mmalerba/projection/blob/6cfa65901e9dbbf453e68139b3b3273c1f9b529f/src/mat/text-field.html#L1-L12
 
 We see three `cdkSlot` here representing the different parts user content can be projected into:
 
@@ -51,7 +59,7 @@ We see three `cdkSlot` here representing the different parts user content can be
 
 Great, we've built our Angular Material text field. Now lets switch gears and pretned we're on the Pantheon common components team. We want to create wrappers for all of the Angular Material components. That way we can bundle in the features we need, put on extra guard rails, and ensure a consistent experience across all Pantheon. We'll call our wrapper `<app-text-field>`. Let's take a look at its template:
 
-https://github.com/mmalerba/projection/blob/9bb73906c00a502fe535fc4393461d72ac53de4d/src/app/text-field.html#L1-L4
+https://github.com/mmalerba/projection/blob/6cfa65901e9dbbf453e68139b3b3273c1f9b529f/src/app/text-field.html#L1-L4
 
 We're using the `<mat-text-field>`, but we're projecting in our own custom label and error using `cdkProject`. We don't want users stuffing random images, etc. into the label, so we restrict it to just text passed via an `input()`. We also think the default error message from Angular Material is kinda vague, so we'll provide our own default error.
 
@@ -61,17 +69,17 @@ We still want our users to pass in a `matInput`, so we'll expose that using `cdk
 
 With the Pantheon wrapper built, we can now switch to the perspective of an app developer on Pantheon. We just want to build a simple form for the user to input their name and address. The address field is the simplest since its optional and we don't need any validation, so lets look at that first.
 
-https://github.com/mmalerba/projection/blob/9bb73906c00a502fe535fc4393461d72ac53de4d/src/app/home.html#L22
+https://github.com/mmalerba/projection/blob/6cfa65901e9dbbf453e68139b3b3273c1f9b529f/src/app/home.html#L22
 
 That was easy! We don't need to project anything, we can just use the default input from Angular Material and the default label the Pantheon component generates from the label input.
 
 Next up, for the first name we want to add some validation and placeholder to the input, so this time we can't rely on the default input template, we'll provide our own:
 
-https://github.com/mmalerba/projection/blob/9bb73906c00a502fe535fc4393461d72ac53de4d/src/app/home.html#L1-L8
+https://github.com/mmalerba/projection/blob/6cfa65901e9dbbf453e68139b3b3273c1f9b529f/src/app/home.html#L1-L8
 
 And finally for the last name, we want to have a special error message that links to some help docs with an explanation of why we require your last name. We can provide our own custom error message for this one.
 
-https://github.com/mmalerba/projection/blob/9bb73906c00a502fe535fc4393461d72ac53de4d/src/app/home.html#L10-L20
+https://github.com/mmalerba/projection/blob/6cfa65901e9dbbf453e68139b3b3273c1f9b529f/src/app/home.html#L10-L20
 
 This is really cool! A large number of Angular Material Github issues boil down to "Why can't I wrap Angular Material components and then deeply project content into them through my wrapper?" In addition to that, having fallback content makes it so the user doesn't have to project in the whole world just for the most basic use case.
 
@@ -84,6 +92,7 @@ Parts of the API feel a bit clunky.
 - The double quotes around slot names passed to `*cdkSlot`/`*cdkProject`
 - Empty default template is verbose
 - Need host directive or provider for any component that uses `*cdkSlot`
+- Anything we want to query for needs to explicitly make itself available for querying 🤮
 
 ### Lots of directives instantiated
 
@@ -91,15 +100,7 @@ Wind up needing to create a bunch of directive instances for all of the slots an
 
 ### Can't rely on `viewChildren` / `contentChildren`
 
-You can't rely on `viewChildren` or `contentChildren` to look at the projected content. `viewChildren` can find the slot's default template, and `contentChildren` can find content passed in from the direct parent, but content that was passed in from an ancestor via `cdkExposeSlots` doesn't show up in either. This means the only real way to coordinate between the parent (e.g. `<mat-text-field>`) and child (e.g. `matInput`) is for the child to inject the parent:
-
-https://github.com/mmalerba/projection/blob/9bb73906c00a502fe535fc4393461d72ac53de4d/src/mat/input.ts#L30
-
-and notify the parent of the child's existence:
-
-https://github.com/mmalerba/projection/blob/9bb73906c00a502fe535fc4393461d72ac53de4d/src/mat/input.ts#L36-L38
-
-This is unfortunate, because we don't want the child to necissarily know about all the parent components it might be projected into.
+You can't rely on `viewChildren` or `contentChildren` to look at the projected content. `viewChildren` can find the slot's default template, and `contentChildren` can find content passed in from the direct parent, but content that was passed in from an ancestor via `cdkExposeSlots` doesn't show up in either. This means we have to roll our own solution for querying, and any projected content needs to explicitly opt itself into being queried.
 
 ### Easier for user to project wrong content
 
